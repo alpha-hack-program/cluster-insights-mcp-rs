@@ -42,15 +42,16 @@ For production deployments, ensure proper RBAC permissions and security reviews.
 
 Platform teams managing Kubernetes (including OpenShift, EKS, GKE, AKS) face constant challenges with resource allocation and capacity planning. Traditional tools require specialized knowledge and multiple commands to answer simple questions.
 
-This MCP server enables **conversational cluster management** by providing AI assistants with five powerful Kubernetes insight functions that query live cluster data via your existing kubeconfig
+This MCP server enables **conversational cluster management** by providing AI assistants with six powerful Kubernetes insight functions that query live cluster data via your existing kubeconfig
 
 ## 🎯 Features
 
-- **5 Kubernetes Insight Functions**: Real-time cluster resource analysis and capacity planning
+- **6 Kubernetes Insight Functions**: Real-time cluster resource analysis and capacity planning
 - **Live Cluster Integration**: Connects to any Kubernetes cluster via kubeconfig
 - **Zero Cluster Modification**: Read-only operations ensure cluster safety
 - **Resource Analysis**: CPU, memory, and pod metrics across nodes and namespaces
 - **Capacity Planning**: Check if workloads will fit before deployment
+- **Replica Planning**: Intelligent capacity checks for scaling applications
 - **Containerization**: Production-ready Podman/Docker setup
 - **Claude Desktop Integration**: DXT packaging for seamless AI assistant integration
 - **Professional Version Management**: Automated version sync with cargo-release
@@ -78,6 +79,7 @@ This MCP server enables **conversational cluster management** by providing AI as
 | **get_node_breakdown** | Detailed resource breakdown per node | *"Show me node-by-node resources"* |
 | **get_namespace_usage** | Resource usage per namespace | *"Which namespace uses most resources?"* |
 | **get_pod_resource_stats** | Top 20 pods by resource consumption | *"Which pods consume most CPU?"* |
+| **check_replica_capacity** | Check if cluster can accommodate additional replicas | *"Can I add 10 more replicas?"* |
 
 > **Note**: All functions query live cluster data via your kubeconfig - no mocking, real insights!
 
@@ -239,12 +241,96 @@ This MCP server enables **conversational cluster management** by providing AI as
 }
 ```
 
+#### 🔄 Check Replica Capacity (NEW!)
+
+**Natural Language Query:** *"Do I have enough capacity for 10 more my-application replicas in namespace default?"*
+
+**What it does:**
+- Finds an existing pod matching your application name in the specified namespace
+- Calculates the resource requirements per replica
+- Checks if the cluster has enough capacity for the requested number of additional replicas
+- Provides detailed analysis with projected utilization
+
+**Example Response (Success):**
+```json
+{
+  "fits": true,
+  "reference_pod": "my-application-7f8b5c9d6-abc12",
+  "cpu_per_replica_cores": 0.5,
+  "memory_per_replica_gb": 1.0,
+  "total_cpu_required_cores": 5.0,
+  "total_memory_required_gb": 10.0,
+  "available_cpu_cores": 11.5,
+  "available_memory_gb": 47.8,
+  "current_pod_count": 3,
+  "projected_cpu_utilization_percent": 72.9,
+  "projected_memory_utilization_percent": 60.6,
+  "explanation": "✓ Capacity CHECK PASSED: You can add 10 more replicas of 'my-application' in namespace 'default'.
+  
+  Reference pod: my-application-7f8b5c9d6-abc12
+  - CPU per replica: 0.500 cores
+  - Memory per replica: 1.000 GB
+  
+  Total required for 10 replicas:
+  - CPU: 5.000 cores
+  - Memory: 10.000 GB
+  
+  Cluster availability:
+  - Available CPU: 11.500 cores (enough for 23 replicas)
+  - Available Memory: 47.800 GB (enough for 47 replicas)
+  
+  Projected utilization after adding replicas:
+  - CPU: 72.9% (current: 52.1%)
+  - Memory: 60.6% (current: 50.2%)
+  
+  Current pods matching 'my-application': 3"
+}
+```
+
+**Example Response (Insufficient Capacity):**
+```json
+{
+  "fits": false,
+  "reference_pod": "my-application-7f8b5c9d6-abc12",
+  "cpu_per_replica_cores": 2.0,
+  "memory_per_replica_gb": 4.0,
+  "total_cpu_required_cores": 20.0,
+  "total_memory_required_gb": 40.0,
+  "available_cpu_cores": 11.5,
+  "available_memory_gb": 47.8,
+  "current_pod_count": 3,
+  "projected_cpu_utilization_percent": 135.4,
+  "projected_memory_utilization_percent": 92.1,
+  "explanation": "✗ Capacity CHECK FAILED: Cannot add 10 replicas of 'my-application' in namespace 'default'.
+  
+  Reference pod: my-application-7f8b5c9d6-abc12
+  - CPU per replica: 2.000 cores
+  - Memory per replica: 4.000 GB
+  
+  Total required for 10 replicas:
+  - CPU: 20.000 cores
+  - Memory: 40.000 GB
+  
+  Issues:
+  CPU shortage: Need 20.000 cores but only 11.500 available (shortfall: 8.500 cores). Maximum possible replicas based on CPU: 5
+  
+  Current pods matching 'my-application': 3"
+}
+```
+
+**Key Benefits:**
+- ✅ **One-step capacity check** - No need to manually calculate replica resources
+- ✅ **Automatic resource discovery** - Finds existing pods and extracts requirements
+- ✅ **Clear recommendations** - Shows exactly how many replicas are possible
+- ✅ **Projected utilization** - See cluster state after scaling
+- ✅ **Actionable insights** - Immediate yes/no answer with detailed reasoning
+
 ### 💡 Usage Tips for LLM Integration
 
 When querying the LLM with this MCP agent:
 
 1. **Ask in natural language** - No need to know Kubernetes API details
-   - *"Do I have enough capacity for 10 more my-application replicas?"*
+   - *"Do I have enough capacity for 10 more my-application replicas in namespace default?"*
    - *"Which namespace is hogging all the memory?"*
    - *"Show me resource utilization across all nodes"*
 
