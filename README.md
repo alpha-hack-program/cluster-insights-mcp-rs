@@ -53,7 +53,7 @@ This MCP server enables **conversational cluster management** by providing AI as
 - **Capacity Planning**: Check if workloads will fit before deployment
 - **Replica Planning**: Intelligent capacity checks for scaling applications
 - **Containerization**: Production-ready Podman/Docker setup
-- **Claude Desktop Integration**: DXT packaging for seamless AI assistant integration
+- **Claude Desktop Integration**: MCPB packaging for seamless AI assistant integration
 - **Professional Version Management**: Automated version sync with cargo-release
 - **CI/CD Pipeline**: Comprehensive GitHub Actions workflow
 - **Production Grade**: Built with Rust for performance and reliability
@@ -508,14 +508,14 @@ Congratulations! Your Cluster Insights tool is ready to be used by an MCP-enable
 ### Packaging
 
 ```bash
-# Create DXT package for Claude Desktop
+# Create MCP Bundle (MCPB) package for Claude Desktop
 $ make pack
 cargo build --release --bin stdio_server
    Compiling cluster-insights-mcp-server v1.0.8 (/Users/.../cluster-insights-mcp-rs)
     Finished `release` profile [optimized] target(s) in 18.23s
 Packing MCP server for Claude Desktop...
 chmod +x ./target/release/stdio_server
-zip -rX cluster-insights-mcp-server.dxt -j dxt/manifest.json ./target/release/stdio_server
+zip -rX cluster-insights-mcp-server.mcpb -j mcpb/manifest.json ./target/release/stdio_server
 updating: manifest.json (deflated 49%)
 updating: stdio_server (deflated 63%)
 ```
@@ -528,7 +528,7 @@ Open Claude Desktop and go to `Settings->Extensions` dropping area.
 
 > **Note**: This demonstrates MCP integration patterns and is not intended for production use with real data.
 
-Drag and drop the `DXT` file.
+Drag and drop the `MCPB` file.
 
 ![Install extension](./images/claude-desktop-1.png)
 
@@ -679,7 +679,7 @@ make help                   # Show all available commands
 ├── scripts/                               # Utility scripts
 │   ├── sync-manifest-version.sh           # Version sync for cargo-release
 │   └── image.sh                          # Container management script
-├── dxt/
+├── mcpb/
 │   └── manifest.json                      # Claude Desktop manifest
 ├── .github/workflows/                     # CI/CD pipelines
 │   └── ci.yml                            # GitHub Actions workflow
@@ -841,7 +841,7 @@ sign-tag = false
 ### 🔄 Version Sync System
 
 - **Single Source of Truth**: `Cargo.toml` version controls everything
-- **Automatic Sync**: Updates `dxt/manifest.json` and `.env` automatically
+- **Automatic Sync**: Updates `mcpb/manifest.json` and `.env` automatically
 - **Git Integration**: Creates commits and tags automatically
 
 ### 📦 Release Workflow
