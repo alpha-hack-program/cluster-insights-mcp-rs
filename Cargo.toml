@@ -4,7 +4,7 @@ version = "1.2.1"
 edition = "2024"
 
 [dependencies]
-rmcp = { version = "0.8.1", features = [
+rmcp = { version = "0.8.5", features = [
     "server",
     "transport-sse-server",
     "transport-io",
