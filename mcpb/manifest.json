@@ -2,7 +2,7 @@
   "dxt_version": "0.1",
   "name": "cluster-insights-mcp-server",
   "display_name": "Cluster Insights MCP Server",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Kubernetes Cluster Resource Analysis and Management via MCP",
   "author": {
     "name": "Carlos Vicens"
