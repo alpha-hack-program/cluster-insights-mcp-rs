@@ -1083,7 +1083,7 @@ impl ServerHandler for ClusterInsights {
     fn get_info(&self) -> ServerInfo {
         // Read basic information from .env file (replaced by sync script during release)
         let name = "cluster-insights-mcp-rs".to_string();
-        let version = "1.3.1".to_string();
+        let version = "1.3.2".to_string();
         let title = "Cluster Insights Engine MCP Server".to_string();
         let website_url = "https://github.com/alpha-hack-program/cluster-insights-mcp-rs.git".to_string();
 
