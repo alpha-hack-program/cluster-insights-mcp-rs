@@ -3,12 +3,12 @@
 # Build arguments
 ARG BASE_IMAGE=registry.access.redhat.com/ubi9/ubi-minimal
 ARG BASE_TAG=9.6
-ARG VERSION=1.0.2
+ARG VERSION=1.3.1
 ARG MAINTAINER="Alpha Hack Group <alpha@github.com>"
-ARG DESCRIPTION="Eligibility Engine MCP Server - Model Context Protocol server for eligibility evaluation"
-ARG APP_NAME=eligibility-engine-mcp-server
+ARG DESCRIPTION="Cluster Insights Engine MCP Server - Model Context Protocol server to check cluster insights"
+ARG APP_NAME=cluster-insights-mcp-rs
 ARG PORT=8001
-ARG SOURCE=https://github.com/alpha-hack-program/eligibility-engine-mcp-rs.git
+ARG SOURCE=https://github.com/alpha-hack-program/cluster-insights-mcp-rs.git
 
 # Multi-stage build
 # Stage 1: Build stage with Rust toolchain
