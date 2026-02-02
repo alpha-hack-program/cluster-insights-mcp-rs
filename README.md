@@ -63,7 +63,6 @@ This MCP server enables **conversational cluster management** by providing AI as
 | Task | Command | Description |
 |------|---------|-------------|
 | **🧪 Test** | `make test` | Run all tests |
-| **🧪 Test SSE** | `make test-sse` | Run MCP server with SSE transport |
 | **🧪 Test MCP** | `make test-mcp` | Run MCP server with Streamable HTTP transport |
 | **🚀 Release** | `make release-patch` | Create new patch release |
 | **📦 Package** | `make pack` | Create Claude Desktop package |
@@ -401,7 +400,6 @@ cd cluster-insights-mcp-rs
 make build-all
 
 # Or build individually
-make build-sse      # SSE Server
 make build-mcp      # MCP HTTP Server
 make build-stdio    # STDIO Server for Claude
 ```
@@ -417,33 +415,30 @@ make test
 
 > **NOTE:**
 >
-> By default `BIND_ADDRESS=127.0.0.1:8000` for **SSE** and `BIND_ADDRESS=127.0.0.1:8001` for **Streamable HTTP**
+> By default `BIND_ADDRESS=127.0.0.1:8001` for **Streamable HTTP**
 >
-> BUT in the *Makefile* both `test-sse` and `test-mcp` targets set `BIND_ADDRESS=0.0.0.0:8001`
+> BUT in the *Makefile* `test-mcp` target set `BIND_ADDRESS=0.0.0.0:8001`
 
 ```bash
-# SSE Server (recommended for Llama Stack, being deprecated in MCP Standard)
-make test-sse
-
 # MCP Streamable HTTP Server
 make test-mcp
 
 # Or directly
-RUST_LOG=info BIND_ADDRESS=127.0.0.1:8003 ./target/release/sse_server
+RUST_LOG=info BIND_ADDRESS=127.0.0.1:8003 ./target/release/mcp_server
 ```
 
 ### 🧪 Testing With MCP Inspector
 
-Let's run the MCP server with SSE transport in one terminal:
+Let's run the MCP server with Streamable HTTP transport in one terminal:
 
 ```bash
-make test-sse
+make test-mcp
 ```
 
 **Output:**
 ```
 2024-10-18T10:15:32.123Z INFO  Cluster Insights MCP Server starting...
-2024-10-18T10:15:32.125Z INFO  SSE server listening on http://0.0.0.0:8003
+2024-10-18T10:15:32.125Z INFO  Streamable HTTP server listening on http://0.0.0.0:8001
 ```
 
 Run MCP inspector with `make inspector`:
@@ -638,7 +633,6 @@ podman run -p 8001:8001 \
 ```bash
 make build-all              # Build all servers
 make build-mcp              # Build MCP server (streamable-http)
-make build-sse              # Build SSE server
 make build-stdio            # Build stdio server
 make pack                   # Pack MCP server for Claude Desktop
 ```
@@ -655,7 +649,6 @@ make sync-version           # Manually sync version to all files
 #### 🧪 Test Commands
 ```bash
 make test                   # Run all tests
-make test-sse               # Test SSE server locally
 make test-mcp               # Test MCP server locally
 ```
 
@@ -673,7 +666,6 @@ make help                   # Show all available commands
 │   │   ├── cluster_insights.rs            # Kubernetes cluster analysis logic
 │   │   ├── metrics.rs                     # Prometheus metrics
 │   │   └── mod.rs
-│   ├── sse_server.rs                      # SSE Server
 │   ├── mcp_server.rs                      # MCP HTTP Server
 │   └── stdio_server.rs                    # STDIO Server
 ├── scripts/                               # Utility scripts

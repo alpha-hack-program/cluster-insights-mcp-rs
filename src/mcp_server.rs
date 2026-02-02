@@ -1,19 +1,29 @@
-use rmcp::transport::streamable_http_server::{
+use std::time::Duration;
+
+use rmcp::transport::{StreamableHttpServerConfig, streamable_http_server::{
     StreamableHttpService, session::local::LocalSessionManager,
-};
+}};
 use tracing_subscriber::{
     layer::SubscriberExt,
     util::SubscriberInitExt,
     {self},
 };
-mod common;
-use common::{cluster_insights::ClusterInsights, metrics};
+
 use axum::{response::IntoResponse, http::StatusCode};
 
+mod common;
+use common::{cluster_insights::ClusterInsights, metrics};
+
 const BIND_ADDRESS: &str = "127.0.0.1:8001";
+const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Install rustls crypto provider before any TLS operations
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -25,23 +35,41 @@ async fn main() -> anyhow::Result<()> {
     // Use environment variable or the static value
     let bind_address = std::env::var("BIND_ADDRESS").unwrap_or_else(|_| BIND_ADDRESS.to_string());
     tracing::info!("Starting streamable-http Compatibility Engine MCP server on {}", bind_address);
+    
     let service = StreamableHttpService::new(
         || Ok(ClusterInsights::new()),
         LocalSessionManager::default().into(),
-        Default::default(),
+        StreamableHttpServerConfig {
+            sse_retry: None,
+            ..Default::default()
+        },
     );
 
     let router = axum::Router::new()
         .nest_service("/mcp", service)
-        // Add endpoints for metrics and health
         .route("/metrics", axum::routing::get(metrics_handler))
         .route("/health", axum::routing::get(health_handler));
 
-
     let tcp_listener = tokio::net::TcpListener::bind(bind_address).await?;
-    let _ = axum::serve(tcp_listener, router)
-        .with_graceful_shutdown(async { tokio::signal::ctrl_c().await.unwrap() })
-        .await;
+    
+    tracing::info!("Server started. Press Ctrl+C to stop.");
+    
+    axum::serve(tcp_listener, router)
+        .with_graceful_shutdown(async {
+            tokio::signal::ctrl_c().await.ok();
+            tracing::info!("Shutdown signal received, stopping server...");
+            
+            // Force exit after timeout if graceful shutdown hangs
+            tokio::spawn(async {
+                tokio::time::sleep(SHUTDOWN_TIMEOUT).await;
+                tracing::warn!("Force exit after {:?} timeout", SHUTDOWN_TIMEOUT);
+                std::process::exit(0);
+            });
+        })
+        .await?;
+    
+    tracing::info!("Server stopped");
+
     Ok(())
 }
 

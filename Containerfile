@@ -7,7 +7,7 @@ ARG VERSION=1.3.3
 ARG MAINTAINER="Alpha Hack Group <alpha@github.com>"
 ARG DESCRIPTION="Cluster Insights Engine MCP Server - Model Context Protocol server to check cluster insights"
 ARG APP_NAME=cluster-insights-mcp-rs
-ARG PORT=8001
+ARG PORT=8000
 ARG SOURCE=https://github.com/alpha-hack-program/cluster-insights-mcp-rs.git
 
 # Multi-stage build
@@ -44,7 +44,7 @@ RUN cargo fetch
 COPY src/ ./src
 
 # Build the application
-RUN cargo build --release --bin sse_server
+RUN cargo build --release --bin mcp_server
 
 # Stage 2: Runtime stage with minimal UBI
 FROM ${BASE_IMAGE}:${BASE_TAG}
@@ -92,12 +92,12 @@ RUN useradd -r -u 1001 -g 0 -s /sbin/nologin \
 WORKDIR /app
 
 # Copy the binary from builder stage
-COPY --from=builder /build/target/release/sse_server /app/sse_server
+COPY --from=builder /build/target/release/mcp_server /app/mcp_server
 
 # Set permissions
 RUN chown -R 1001:0 /app && \
     chmod -R g=u /app && \
-    chmod +x /app/sse_server
+    chmod +x /app/mcp_server
 
 # Switch to non-root user
 USER 1001
@@ -115,4 +115,4 @@ ENV RUST_BACKTRACE=1
 ENV PORT=${PORT}
 
 # Run the application
-CMD ["/app/sse_server"]
+CMD ["/app/mcp_server"]
